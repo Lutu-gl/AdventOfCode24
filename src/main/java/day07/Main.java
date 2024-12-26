@@ -35,7 +35,7 @@ public class Main {
             }
         }
 
-        return content.toString().trim(); // Remove trailing newline
+        return content.toString().trim();
     }
 
     public static long solve1(String input) {
