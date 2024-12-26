@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.concurrent.*;
 
 public class MainOptimized {
-
     public static void main(String[] args) {
         try {
             List<Integer> input = readInput("src/main/java/day22/input.txt");

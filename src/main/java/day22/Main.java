@@ -144,8 +144,8 @@ public class Main {
     }
 
     private static BigInteger mixAndPrune(BigInteger secret, BigInteger value) {
-        secret = secret.xor(value); // Mix with XOR
-        secret = secret.mod(BigInteger.valueOf(16777216)); // Prune with modulo
+        secret = secret.xor(value);
+        secret = secret.mod(BigInteger.valueOf(16777216));
         return secret;
     }
 }
