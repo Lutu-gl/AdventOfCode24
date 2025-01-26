@@ -74,7 +74,6 @@ public class Main {
         Bringt leider Komplikationen da nested do oder don't vorkommen koennen.
 
         Neuer Ansatz Prozedural
-
          */
         String regexOld2 = "do\\(\\)(?:(?!don't\\(\\)).)*";
         boolean enabled = true;

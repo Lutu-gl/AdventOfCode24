@@ -3,8 +3,8 @@ package day07;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Main {
 
@@ -12,9 +12,7 @@ public class Main {
         try {
             String input = readInput("src/main/java/day07/input.txt");
             System.out.println(solve1(input));
-            solve2(input);
-            //System.out.println("-----------------");
-            //solve2("xmul(2,4)&mul[3,7]!^don't()_mul(5,5)+mul(32,64](mul(11,8)undo()?mul(8,5))mul(2,2)");
+            System.out.println(solve2(input));
         } catch (IOException e) {
             System.err.println("Error reading input file: " + e.getMessage());
         }
@@ -37,125 +35,99 @@ public class Main {
             }
         }
 
-        return content.toString().trim(); // Remove trailing newline
+        return content.toString().trim();
     }
 
-    public static int solve1(String input) {
-        String regex = "mul\\((\\d{1,3}),(\\d{1,3})\\)";
+    public static long solve1(String input) {
+        String[] lines = input.split("\n");
+        long totalCalibrationResult = 0;
 
-        Pattern pattern = Pattern.compile(regex);
-        Matcher matcher = pattern.matcher(input);
+        for (String line : lines) {
+            String[] parts = line.split(": ");
+            long targetValue = Long.parseLong(parts[0]);
+            String[] numbers = parts[1].split(" ");
 
-        int sum = 0;
-        while (matcher.find()) {
-            int firstNum = Integer.parseInt(matcher.group(1));
-            int secondNum = Integer.parseInt(matcher.group(2));
-            sum += firstNum * secondNum;
-        }
-
-        return sum;
-    }
-
-
-    public static void solve2(String input) throws IOException {
-        String regexOld = "do\\(\\)(?:(?!don't\\(\\)).)*mul\\((\\d{1,3}),(\\d{1,3})\\)";
-        /*
-        Regex der schaut ob do() vorkommt und dann die naechsten mult() capured.
-        Das ?! ist ein negative lookahead, das bedeutet dass der naechste Teil nicht don't() sein darf.
-        Das . ist ein wildcard, das bedeutet dass es jedes Zeichen matched.
-        Das * bedeutet dass es 0 oder mehrere Zeichen matched.
-        Das ?: bedeutet dass es nicht captured wird. (nicht in den Gruppen gespeichert wird)
-
-        -> Leider geht das nicht da nur die letzte group von mul() captured wird.
-        Neuer Ansatz: Zuerst alle strings finden die zwischen do() und don't liegen und dann darauf suchen
-        Bringt leider Komplikationen da nested do oder don't vorkommen koennen.
-
-        Neuer Ansatz Prozedural
-
-         */
-        String regexOld2 = "do\\(\\)(?:(?!don't\\(\\)).)*";
-        boolean enabled = true;
-        int sum = 0;
-
-        input += "don't()"; // add a don't at the end to make sure the last mul is also counted
-
-        Pattern mulPattern = Pattern.compile("mul\\((\\d{1,3}),(\\d{1,3})\\)");
-        Pattern controlPattern = Pattern.compile("(do\\(\\)|don't\\(\\))");
-
-        Matcher controlMatcher = controlPattern.matcher(input);
-        Matcher mulMatcher = mulPattern.matcher(input);
-        int lastIndex = 0;
-
-        while (controlMatcher.find()) {
-            String match = controlMatcher.group(0);
-
-            mulMatcher.region(lastIndex, controlMatcher.start());
-            while (mulMatcher.find()) {
-
-                if(enabled) {
-                    int firstNum = Integer.parseInt(mulMatcher.group(1));
-                    int secondNum = Integer.parseInt(mulMatcher.group(2));
-                    sum += firstNum * secondNum;
-                }
+            List<Integer> numList = new ArrayList<>();
+            for (String number : numbers) {
+                numList.add(Integer.parseInt(number));
             }
-            if (match.equals("do()")) {
-                enabled = true;
-            } else {
-                enabled = false;
+
+            if (canProduceTarget(numList, targetValue)) {
+                totalCalibrationResult += targetValue;
             }
-            lastIndex = controlMatcher.end();
         }
 
-        System.out.println(sum);
+        return totalCalibrationResult;
     }
 
-    // determine if the array should be reversed
-    // check the first 4 elements and if the maximum of them are smaller then reverse
-    private static boolean shouldReverse(Integer[] arr) {
-        if (arr.length <= 3) {
-            return false;
-        }
-        int rs = 0;
-        int notRs = 0;
-        if(arr[0] < arr[1]) {
-            rs++;
-        } else {
-            notRs++;
-        }
-        if(arr[1] < arr[2]) {
-            rs++;
-        } else {
-            notRs++;
-        }
-        if(arr[2] < arr[3]) {
-            rs++;
-        } else {
-            notRs++;
-        }
-        return rs > notRs;
+    public static boolean canProduceTarget(List<Integer> numbers, long targetValue) {
+        return evaluate(numbers, 0, numbers.get(0), targetValue);
     }
 
-    // -1 for safe and other for index of unsafe
-    private static int isSafe(Integer[] arr) {
-        if (arr.length <= 1) {
-            return -1;
+    private static boolean evaluate(List<Integer> numbers, int index, long current, long targetValue) {
+        if (index == numbers.size() - 1) {
+            return current == targetValue;
         }
 
-        int prev = arr[0];
-        boolean save = true;
-        int i = 1;
-        for (; i < arr.length; i++) {
-            int diff = prev - arr[i];
-            if(diff != 1 && diff != 2 && diff != 3) {
-                save = false;
-                break;
+        int nextValue = numbers.get(index + 1);
+
+        if (evaluate(numbers, index + 1, current + nextValue, targetValue)) {
+            return true;
+        }
+
+        if (evaluate(numbers, index + 1, current * nextValue, targetValue)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public static long solve2(String input) {
+        String[] lines = input.split("\n");
+        long totalCalibrationResult = 0;
+
+        for (String line : lines) {
+            String[] parts = line.split(": ");
+            long targetValue = Long.parseLong(parts[0]);
+            String[] numbers = parts[1].split(" ");
+
+            List<Integer> numList = new ArrayList<>();
+            for (String number : numbers) {
+                numList.add(Integer.parseInt(number));
             }
-            prev = arr[i];
+
+            if (canProduceTarget2(numList, targetValue)) {
+                totalCalibrationResult += targetValue;
+            }
         }
-        if(save) {
-            return -1;
-        } else {
-            return i;
+
+        return totalCalibrationResult;
+    }
+
+    public static boolean canProduceTarget2(List<Integer> numbers, long targetValue) {
+        return evaluate2(numbers, 0, numbers.get(0), targetValue);
+    }
+
+    private static boolean evaluate2(List<Integer> numbers, int index, long current, long targetValue) {
+        if (index == numbers.size() - 1) {
+            return current == targetValue;
         }
+
+        int nextValue = numbers.get(index + 1);
+
+        if (evaluate2(numbers, index + 1, current + nextValue, targetValue)) {
+            return true;
+        }
+
+        if (evaluate2(numbers, index + 1, current * nextValue, targetValue)) {
+            return true;
+        }
+
+        long concatenated = Long.parseLong(current + "" + nextValue);
+        if (evaluate2(numbers, index + 1, concatenated, targetValue)) {
+            return true;
+        }
+
+        return false;
     }
 }
