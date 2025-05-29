@@ -6,9 +6,6 @@ import java.io.IOException;
 import java.util.*;
 
 
-/**
- * My idea is to implement Dijsktra's algorithm to find the shortest path from the robot to the goal.
- */
 public class Main {
 
     public static void main(String[] args) {
